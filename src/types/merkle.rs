@@ -2,11 +2,13 @@ use super::hash::{Hashable, H256};
 
 /// A Merkle tree.
 #[derive(Debug, Default)]
-pub struct MerkleTree {
-}
+pub struct MerkleTree {}
 
 impl MerkleTree {
-    pub fn new<T>(data: &[T]) -> Self where T: Hashable, {
+    pub fn new<T>(data: &[T]) -> Self
+    where
+        T: Hashable,
+    {
         unimplemented!()
     }
 
@@ -29,8 +31,8 @@ pub fn verify(root: &H256, datum: &H256, proof: &[H256], index: usize, leaf_size
 
 #[cfg(test)]
 mod tests {
-    use crate::types::hash::H256;
     use super::*;
+    use crate::types::hash::H256;
 
     macro_rules! gen_merkle_tree_data {
         () => {{
@@ -64,8 +66,9 @@ mod tests {
         let input_data: Vec<H256> = gen_merkle_tree_data!();
         let merkle_tree = MerkleTree::new(&input_data);
         let proof = merkle_tree.proof(0);
-        assert_eq!(proof,
-                   vec![hex!("965b093a75a75895a351786dd7a188515173f6928a8af8c9baa4dcff268a4f0f").into()]
+        assert_eq!(
+            proof,
+            vec![hex!("965b093a75a75895a351786dd7a188515173f6928a8af8c9baa4dcff268a4f0f").into()]
         );
         // "965b093a75a75895a351786dd7a188515173f6928a8af8c9baa4dcff268a4f0f" is the hash of
         // "0101010101010101010101010101010101010101010101010101010101010202"
@@ -76,7 +79,13 @@ mod tests {
         let input_data: Vec<H256> = gen_merkle_tree_data!();
         let merkle_tree = MerkleTree::new(&input_data);
         let proof = merkle_tree.proof(0);
-        assert!(verify(&merkle_tree.root(), &input_data[0].hash(), &proof, 0, input_data.len()));
+        assert!(verify(
+            &merkle_tree.root(),
+            &input_data[0].hash(),
+            &proof,
+            0,
+            input_data.len()
+        ));
     }
 }
 

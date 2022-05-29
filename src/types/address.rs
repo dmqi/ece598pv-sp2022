@@ -1,5 +1,5 @@
-use serde::{Serialize, Deserialize};
 use ring::digest;
+use serde::{Deserialize, Serialize};
 
 // 20-byte address
 #[derive(Eq, PartialEq, Serialize, Deserialize, Clone, Hash, Default, Copy)]
@@ -47,7 +47,7 @@ impl std::fmt::Debug for Address {
     }
 }
 
-impl Address {  
+impl Address {
     pub fn from_public_key_bytes(bytes: &[u8]) -> Address {
         let mut buffer: [u8; 20] = [0; 20];
         let digest = digest::digest(&digest::SHA256, bytes);

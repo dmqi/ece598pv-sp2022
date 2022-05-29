@@ -27,9 +27,9 @@ pub struct Handle {
     write_queue: mpsc::UnboundedSender<Vec<u8>>,
 }
 
-#[cfg(any(test,test_utilities))]
+#[cfg(any(test, test_utilities))]
 pub struct TestReceiver {
-    r: mpsc::UnboundedReceiver<Vec<u8>>
+    r: mpsc::UnboundedReceiver<Vec<u8>>,
 }
 
 impl Handle {
@@ -46,20 +46,23 @@ impl Handle {
         &self.addr
     }
 
-    #[cfg(any(test,test_utilities))]
+    #[cfg(any(test, test_utilities))]
     pub fn test_handle() -> (Handle, TestReceiver) {
-        let (s,r) = mpsc::unbounded();
-        (Handle {
-            addr: std::net::SocketAddr::new(std::net::IpAddr::V4(std::net::Ipv4Addr::new(127, 0, 0, 1)), 12321),
-            write_queue: s,
-        },
-        TestReceiver {
-            r
-        })
+        let (s, r) = mpsc::unbounded();
+        (
+            Handle {
+                addr: std::net::SocketAddr::new(
+                    std::net::IpAddr::V4(std::net::Ipv4Addr::new(127, 0, 0, 1)),
+                    12321,
+                ),
+                write_queue: s,
+            },
+            TestReceiver { r },
+        )
     }
 }
 
-#[cfg(any(test,test_utilities))]
+#[cfg(any(test, test_utilities))]
 impl TestReceiver {
     pub fn recv(&mut self) -> Message {
         let bytes = smol::block_on(futures::stream::StreamExt::next(&mut self.r)).unwrap();

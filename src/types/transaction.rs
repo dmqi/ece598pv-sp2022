@@ -1,22 +1,45 @@
-use serde::{Serialize,Deserialize};
-use ring::signature::{Ed25519KeyPair, Signature, KeyPair, VerificationAlgorithm, EdDSAParameters};
+use crate::types::hash::{Hashable, H256};
+
 use rand::Rng;
+use ring::{
+    digest,
+    signature::{Ed25519KeyPair, EdDSAParameters, KeyPair, Signature, VerificationAlgorithm},
+};
+use serde::{Deserialize, Serialize};
+
+use super::address::Address;
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct Transaction {
+    sender: Address,
+    receiver: Address,
+    value: u32,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct SignedTransaction {
+    pub transaction: Transaction,
+    pub signature: Vec<u8>,
+    pub public_key: Vec<u8>,
+}
+
+impl Hashable for SignedTransaction {
+    fn hash(&self) -> H256 {
+        let s = bincode::serialize(&self).unwrap();
+        digest::digest(&digest::SHA256, s.as_ref()).into()
+    }
 }
 
 /// Create digital signature of a transaction
 pub fn sign(t: &Transaction, key: &Ed25519KeyPair) -> Signature {
-    unimplemented!()
+    let t = bincode::serialize(&t).unwrap();
+    let sig = key.sign(&t);
+    sig
 }
 
 /// Verify digital signature of a transaction, using public key instead of secret key
 pub fn verify(t: &Transaction, public_key: &[u8], signature: &[u8]) -> bool {
+    // transaction + secret_key => signature
     unimplemented!()
 }
 
@@ -32,7 +55,6 @@ mod tests {
     use super::*;
     use crate::types::key_pair;
     use ring::signature::KeyPair;
-
 
     #[test]
     fn sign_verify() {

@@ -11,7 +11,7 @@ use crate::types::block::Block;
 
 enum ControlSignal {
     Start(u64), // the number controls the lambda of interval between block generation
-    Update, // update the block in mining, it may due to new blockchain tip or new transaction
+    Update,     // update the block in mining, it may due to new blockchain tip or new transaction
     Exit,
 }
 
@@ -51,7 +51,7 @@ pub fn new() -> (Context, Handle, Receiver<Block>) {
     (ctx, handle, finished_block_receiver)
 }
 
-#[cfg(any(test,test_utilities))]
+#[cfg(any(test, test_utilities))]
 fn test_new() -> (Context, Handle, Receiver<Block>) {
     new()
 }
@@ -149,8 +149,8 @@ impl Context {
 
 #[cfg(test)]
 mod test {
-    use ntest::timeout;
     use crate::types::hash::Hashable;
+    use ntest::timeout;
 
     #[test]
     #[timeout(60000)]

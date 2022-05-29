@@ -1,17 +1,16 @@
-use crate::types::address::Address;
-use super::peer;
 use super::message;
+use super::peer;
+use crate::types::address::Address;
 
 use async_dup::Arc as AsyncArc;
 use futures::io::{AsyncReadExt, AsyncWriteExt};
 use futures::io::{BufReader, BufWriter};
 use futures::{channel::oneshot, stream::StreamExt};
-use smol::{Async, Executor};
 use log::{debug, info, trace};
+use smol::{Async, Executor};
 use std::net;
 use std::sync::Arc;
 use std::thread;
-
 
 pub fn new(
     addr: std::net::SocketAddr,
@@ -52,11 +51,11 @@ impl Context {
         ex.spawn(async move {
             self.dispatch_control(ex_clone).await.unwrap();
         })
-            .detach();
+        .detach();
         ex.spawn(async move {
             Self::listener_loop(listener, control_chan).await.unwrap();
         })
-            .detach();
+        .detach();
         thread::spawn(move || smol::block_on(ex.run(futures::future::pending::<()>())));
         return Ok(());
     }
@@ -182,7 +181,7 @@ impl Context {
             }
             // the peer is disconnected
         })
-            .detach();
+        .detach();
 
         // second, start a task that keeps writing to this guy
         let mut writer = BufWriter::new(stream.clone());
@@ -220,7 +219,7 @@ impl Context {
                 .await
                 .unwrap();
         })
-            .detach();
+        .detach();
 
         // insert the peer handle so that we can broadcast to this guy later
         self.peers.insert(addr, handle.clone());
@@ -232,11 +231,11 @@ impl Context {
 pub struct Handle {
     control_chan: smol::channel::Sender<ControlSignal>,
 }
-#[cfg(any(test,test_utilities))]
-pub struct TestReceiver{
+#[cfg(any(test, test_utilities))]
+pub struct TestReceiver {
     control_chan: smol::channel::Receiver<ControlSignal>,
 }
-#[cfg(any(test,test_utilities))]
+#[cfg(any(test, test_utilities))]
 impl TestReceiver {
     pub fn recv(&self) -> Option<message::Message> {
         let sig = smol::block_on(self.control_chan.recv()).unwrap();
@@ -255,7 +254,7 @@ impl Handle {
             self.control_chan
                 .send(ControlSignal::ConnectNewPeer(addr, sender)),
         )
-            .unwrap();
+        .unwrap();
         smol::block_on(receiver).unwrap()
     }
 
@@ -264,15 +263,19 @@ impl Handle {
     }
 
     pub fn send(&self, receiver: Address, msg: message::Message) {
-        smol::block_on(self.control_chan.send(ControlSignal::SendToPeer((receiver, msg)))).unwrap();
+        smol::block_on(
+            self.control_chan
+                .send(ControlSignal::SendToPeer((receiver, msg))),
+        )
+        .unwrap();
     }
 
-    #[cfg(any(test,test_utilities))]
+    #[cfg(any(test, test_utilities))]
     pub fn new_for_test() -> (Handle, TestReceiver) {
-        let (s,r) = smol::channel::unbounded();
-        let h = Handle {control_chan: s};
-        let t = TestReceiver {control_chan: r};
-        (h,t)
+        let (s, r) = smol::channel::unbounded();
+        let h = Handle { control_chan: s };
+        let t = TestReceiver { control_chan: r };
+        (h, t)
     }
 }
 
@@ -284,5 +287,5 @@ enum ControlSignal {
     BroadcastMessage(message::Message),
     GetNewPeer(Async<net::TcpStream>),
     DroppedPeer(std::net::SocketAddr),
-    SendToPeer((Address,message::Message)),
+    SendToPeer((Address, message::Message)),
 }

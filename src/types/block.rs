@@ -1,9 +1,8 @@
-use serde::{Serialize, Deserialize};
-use crate::types::hash::{H256, Hashable};
+use crate::types::hash::{Hashable, H256};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Block {
-}
+pub struct Block {}
 
 impl Hashable for Block {
     fn hash(&self) -> H256 {
