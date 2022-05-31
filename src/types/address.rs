@@ -1,5 +1,5 @@
 use rand::Rng;
-use ring::digest;
+use ring::{digest, signature::{Ed25519KeyPair, KeyPair}};
 use serde::{Deserialize, Serialize};
 
 // 20-byte address
@@ -55,6 +55,13 @@ impl Address {
         let hash = digest.as_ref();
         buffer[..].copy_from_slice(&hash[hash.len() - 20..hash.len()]);
         Address(buffer)
+    }
+
+    pub fn from_public_key(key: <Ed25519KeyPair as KeyPair>::PublicKey) -> Address {
+        let key_hash = digest::digest(&digest::SHA256, key.as_ref());
+        let mut addr = [0; 20];
+        addr.copy_from_slice(&(key_hash.as_ref()[12..32]));
+        Address(addr)
     }
 }
 
