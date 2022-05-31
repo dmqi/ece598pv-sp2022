@@ -1,19 +1,25 @@
-use crate::types::hash::{Hashable, H256};
-
 use rand::Rng;
 use ring::{
     digest,
-    signature::{Ed25519KeyPair, EdDSAParameters, KeyPair, Signature, VerificationAlgorithm},
+    signature::{self, Ed25519KeyPair, Signature},
 };
 use serde::{Deserialize, Serialize};
 
-use super::address::Address;
+use crate::types::address::{generate_random_address, Address};
+use crate::types::hash::{Hashable, H256};
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct Transaction {
     sender: Address,
     receiver: Address,
     value: u32,
+}
+
+impl Hashable for Transaction {
+    fn hash(&self) -> H256 {
+        let s = bincode::serialize(&self).unwrap();
+        digest::digest(&digest::SHA256, s.as_ref()).into()
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
@@ -40,12 +46,19 @@ pub fn sign(t: &Transaction, key: &Ed25519KeyPair) -> Signature {
 /// Verify digital signature of a transaction, using public key instead of secret key
 pub fn verify(t: &Transaction, public_key: &[u8], signature: &[u8]) -> bool {
     // transaction + secret_key => signature
-    unimplemented!()
+    let msg = bincode::serialize(&t).unwrap();
+    let hash = digest::digest(&digest::SHA256, &msg).as_ref().to_vec();
+    let pub_key = signature::UnparsedPublicKey::new(&signature::ED25519, public_key);
+    pub_key.verify(&hash, signature).is_ok()
 }
 
 #[cfg(any(test, test_utilities))]
 pub fn generate_random_transaction() -> Transaction {
-    unimplemented!()
+    Transaction { 
+        sender: generate_random_address(), 
+        receiver: generate_random_address(), 
+        value: 0,
+    }
 }
 
 // DO NOT CHANGE THIS COMMENT, IT IS FOR AUTOGRADER. BEFORE TEST
