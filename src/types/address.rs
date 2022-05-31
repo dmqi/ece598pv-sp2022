@@ -1,3 +1,4 @@
+use rand::Rng;
 use ring::digest;
 use serde::{Deserialize, Serialize};
 
@@ -56,6 +57,16 @@ impl Address {
         Address(buffer)
     }
 }
+
+pub fn generate_random_address() -> Address {
+    let mut rng = rand::thread_rng();
+    let mut addr = [0; 20];
+    for x in addr.iter_mut() {
+        *x = rng.gen();
+    }
+    (&addr).into()
+}
+
 // DO NOT CHANGE THIS COMMENT, IT IS FOR AUTOGRADER. BEFORE TEST
 
 #[cfg(test)]
