@@ -39,13 +39,12 @@ impl Hashable for SignedTransaction {
 /// Create digital signature of a transaction
 pub fn sign(t: &Transaction, key: &Ed25519KeyPair) -> Signature {
     let t = bincode::serialize(&t).unwrap();
-    let sig = key.sign(&t);
-    sig
+    let hash = digest::digest(&digest::SHA256, &t).as_ref().to_vec();
+    key.sign(&hash)
 }
 
 /// Verify digital signature of a transaction, using public key instead of secret key
 pub fn verify(t: &Transaction, public_key: &[u8], signature: &[u8]) -> bool {
-    // transaction + secret_key => signature
     let msg = bincode::serialize(&t).unwrap();
     let hash = digest::digest(&digest::SHA256, &msg).as_ref().to_vec();
     let pub_key = signature::UnparsedPublicKey::new(&signature::ED25519, public_key);
