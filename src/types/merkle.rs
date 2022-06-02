@@ -11,6 +11,16 @@ pub struct MerkleTree {
     leaf_size: usize,
 }
 
+fn get_level(index: usize) -> u32 {
+    let mut height = 0;
+    let mut index = index;
+    while index > 1 {
+        height += 1;
+        index /= 2;
+    }
+    height
+}
+
 impl MerkleTree {
     pub fn new<T>(data: &[T]) -> Self
     where
