@@ -19,12 +19,9 @@ impl MerkleTree {
         let mut tree: Vec<H256> = Vec::new();
         let mut data_len = data.len();
         if data_len == 0 {
-            let data_block: [u8; 32]  = [0; 32];
+            let data_block: [u8; 32] = [0; 32];
             tree.push(data_block.into());
-            return MerkleTree {
-                tree,
-                leaf_size: 0,
-            }
+            return MerkleTree { tree, leaf_size: 0 };
         }
         let mut queue: VecDeque<H256> = VecDeque::new();
         for x in data.into_iter() {
@@ -34,12 +31,45 @@ impl MerkleTree {
             queue.push_back(data[data_len - 1].hash());
             data_len += 1;
         }
+        let mut count = 0;
+        let mut level_len = data_len;
+        while !queue.is_empty() {
+            let hash1 = queue.pop_front().unwrap();
+            tree.push(hash1);
+            count += 1;
+            let temp = queue.pop_front();
+            if temp.is_none() {
+                break;
+            }
+            let hash2 = temp.unwrap();
+            tree.push(hash2);
+            count += 1;
+            let mut ctx = digest::Context::new(&digest::SHA256);
+            ctx.update(hash1.as_ref());
+            ctx.update(hash2.as_ref());
+            let hash: H256 = ctx.finish().into();
+            queue.push_back(hash);
+            if count == level_len && count != 2 {
+                let i = level_len / 2;
+                if i % 2 != 0 {
+                    queue.push_back(hash);
+                    level_len = i + 1;
+                    count = 0;
+                } else {
+                    level_len = i;
+                    count = 0;
+                }
+            }
+        }
 
-        MerkleTree::default()
+        MerkleTree {
+            tree,
+            leaf_size: data_len,
+        }
     }
 
     pub fn root(&self) -> H256 {
-        unimplemented!()
+        self.tree[self.tree.len() - 1]
     }
 
     /// Returns the Merkle Proof of data at index i
