@@ -1,48 +1,13 @@
 use super::hash::{Hashable, H256};
 
-use ring::digest::{self, Context};
-use std::cell::RefCell;
-use std::collections::btree_set::Difference;
-use std::collections::{BTreeMap, VecDeque};
-use std::convert::TryFrom;
-use std::rc::Rc;
-use std::sync::{Arc, Mutex};
+use std::collections::VecDeque;
 
-#[derive(Clone, Debug, Default)]
-pub struct MerkleNode {
-    left: Option<Rc<RefCell<MerkleNode>>>,
-    right: Option<Rc<RefCell<MerkleNode>>>,
-    value: H256,
-}
-
-impl MerkleNode {
-    pub fn from_hash(value: H256) -> MerkleNode {
-        MerkleNode { 
-            left: None,
-            right: None,
-            value,
-        }
-    }
-
-    pub fn from_nodes(l: &MerkleNode, r: &MerkleNode) -> MerkleNode {
-        let mut ctx = digest::Context::new(&digest::SHA256);
-        ctx.update(l.value.as_ref());
-        ctx.update(r.value.as_ref());
-        let v = ctx.finish();
-        MerkleNode { 
-            left: Option::from(Rc::new(RefCell::new(l.clone()))),
-            right: Option::from(Rc::new(RefCell::new(r.clone()))),
-            value: H256::from(<[u8; 32]>::try_from(v.as_ref()).unwrap()),
-        }
-    }
-}
+use ring::digest;
 
 /// A Merkle tree.
 #[derive(Debug, Default)]
 pub struct MerkleTree {
-    root: MerkleNode,
-    nodes: BTreeMap<usize, VecDeque<MerkleNode>>,
-    height: usize, 
+    tree: Vec<H256>,
     leaf_size: usize,
 }
 
@@ -51,7 +16,26 @@ impl MerkleTree {
     where
         T: Hashable,
     {
-        unimplemented!()
+        let mut tree: Vec<H256> = Vec::new();
+        let mut data_len = data.len();
+        if data_len == 0 {
+            let data_block: [u8; 32]  = [0; 32];
+            tree.push(data_block.into());
+            return MerkleTree {
+                tree,
+                leaf_size: 0,
+            }
+        }
+        let mut queue: VecDeque<H256> = VecDeque::new();
+        for x in data.into_iter() {
+            queue.push_back(x.hash());
+        }
+        if data_len % 2 != 0 {
+            queue.push_back(data[data_len - 1].hash());
+            data_len += 1;
+        }
+
+        MerkleTree::default()
     }
 
     pub fn root(&self) -> H256 {
