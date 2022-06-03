@@ -97,7 +97,7 @@ impl MerkleTree {
         let mut offset = 0;
         let mut cur_index = index;
         for i in 0..height {
-            let mut level_offset = (cur_index - offset) / 2;
+            let level_offset = (cur_index - offset) / 2;
             if level_offset % 2 == 0 {
                 proof.push(self.tree[cur_index + 1]);
             } else {
@@ -115,8 +115,23 @@ impl MerkleTree {
 
 /// Verify that the datum hash with a vector of proofs will produce the Merkle root. Also need the
 /// index of datum and `leaf_size`, the total number of leaves.
-pub fn verify(root: &H256, datum: &H256, proof: &[H256], index: usize, leaf_size: usize) -> bool {
-    unimplemented!()
+pub fn verify(root: &H256, datum: &H256, proof: &[H256], index: usize, _leaf_size: usize) -> bool {
+    let height = proof.len();
+    let mut cur_hash = *datum;
+    let mut cur_index = index;
+    for i in 0..height {
+        let mut ctx = digest::Context::new(&digest::SHA256);
+        if cur_index % 2 == 0 {
+            ctx.update(cur_hash.as_ref());
+            ctx.update(proof[i].as_ref());
+        } else {
+            ctx.update(proof[i].as_ref());
+            ctx.update(cur_hash.as_ref());
+        }
+        cur_hash = ctx.finish().into();
+        cur_index = cur_index / 2;
+    }
+    cur_hash == *root
 }
 // DO NOT CHANGE THIS COMMENT, IT IS FOR AUTOGRADER. BEFORE TEST
 
