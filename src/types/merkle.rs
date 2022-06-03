@@ -84,7 +84,32 @@ impl MerkleTree {
 
     /// Returns the Merkle Proof of data at index i
     pub fn proof(&self, index: usize) -> Vec<H256> {
-        unimplemented!()
+        let mut proof = Vec::new();
+        if index >= self.leaf_size {
+            return proof;
+        }
+        let height = get_level(self.leaf_size);
+        self.construct_proof(&mut proof, height, index);
+        proof
+    }
+
+    fn construct_proof(&self, proof: &mut Vec<H256>, height: u32, index: usize) {
+        let mut offset = 0;
+        let mut cur_index = index;
+        for i in 0..height {
+            let mut level_offset = (cur_index - offset) / 2;
+            if level_offset % 2 == 0 {
+                proof.push(self.tree[cur_index + 1]);
+            } else {
+                proof.push(self.tree[cur_index - 1]);
+            }
+            if i != 0 {
+                offset += 2usize.pow(height - i);
+            } else {
+                offset += self.leaf_size;
+            }
+            cur_index = offset + level_offset;
+        }
     }
 }
 
